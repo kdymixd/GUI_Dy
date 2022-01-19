@@ -1,6 +1,5 @@
 import tkinter as tk
-from matplotlib.backends.backend_tkagg import (
-    FigureCanvasTkAgg, NavigationToolbar2Tk)
+from matplotlib.backends.backend_tkagg import  NavigationToolbar2Tk
 from figure import Image_Plot
 
 
@@ -178,18 +177,16 @@ class PlotFrame(tk.Frame):
         # Image display #
 
         self.image_plot = Image_Plot(self)
-        self.canvas1 = FigureCanvasTkAgg(self.image_plot.f1, self)
-        self.canvas1.get_tk_widget().grid(row = 1, column =1, rowspan = 25, columnspan = 5, sticky ='w')
-        self.canvas1.get_tk_widget().configure(takefocus=False)
-        self.canvas1.draw()
+        self.image_plot.canvas1.get_tk_widget().grid(row = 1, column =1, rowspan = 25, columnspan = 5, sticky ='w')
+        # self.image_plot.canvas1.get_tk_widget().configure(curTrue)
+        self.image_plot.canvas1.draw()
         self.toolbarFrame = tk.Frame(master=self)
         self.toolbarFrame.grid(row=32,column=1, columnspan = 6, sticky ='w')
-        self.toolbar = NavigationToolbar2Tk(self.canvas1, self.toolbarFrame)      
-        self.canvas2 = FigureCanvasTkAgg(self.image_plot.f2, self)
-        self.canvas2.get_tk_widget().grid(row = 1, column =6, rowspan = 25, columnspan = 4)#, sticky ='w')
-        self.canvas2.get_tk_widget().configure(takefocus=False)
-        self.canvas2.draw()
-
+        self.toolbar = NavigationToolbar2Tk(self.image_plot.canvas1, self.toolbarFrame)      
+        self.image_plot.canvas2.get_tk_widget().grid(row = 1, column =6, rowspan = 25, columnspan = 4)#, sticky ='w')
+        # self.image_plot.canvas2.get_tk_widget().configure(takefocus=True)
+        self.image_plot.canvas2.draw()
+        self.image_plot.canvas1.get_tk_widget().bind("<Enter>", give_focus) #give focus to plot when mouse pointer on it 
             # initialization of tk_vars
     def init_tk_vars(self):
         #default value of variables

@@ -15,7 +15,7 @@ import os
 from backend import Backend
 import backend
 import folder_explorer
-from frames import FileFrame, PlotFrame
+from frames import FileFrame, PlotFrame, give_focus
 import config
 import analysis
 
@@ -36,9 +36,10 @@ class MainApplication(tk.Frame, folder_explorer.FolderExplorer):
         self.plotFrame.grid(row=1, column=1, sticky='ew')
         self.parent.bind("<<RunsEvent>>", self.handle_runs_event)
         self.parent.bind("<<ImagesEvent>>", self.handle_images_event)
+        self.parent.bind("<<CursorEvent>>", self.on_new_cursor)
 
         ##############################################
-        # self.start()
+        self.start()
 
     #Callbacks
 
@@ -105,6 +106,11 @@ class MainApplication(tk.Frame, folder_explorer.FolderExplorer):
         self.plotFrame.var_xmax.set(int(xlims[1]))
         self.plotFrame.var_ymin.set(int(ylims[0]))
         self.plotFrame.var_ymax.set(int(ylims[1]))
+
+    def on_new_cursor(self,event):
+        self.plotFrame.var_vx.set(event.x)
+        self.plotFrame.var_vy.set(event.y)
+        self.plotFrame.image_plot.plot_new_cursor((event.x, event.y))
     def on_back_to_default(self):
         print("on back to default")
     
