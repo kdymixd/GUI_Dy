@@ -122,15 +122,15 @@ class PlotFrame(tk.Frame):
         self.init_tk_vars()
         #  Cursors  #
         check_fixed_cursor = HoverCheckButton(self, text='Fixed cursor', variable=self.var_fixed_cursors, font = 'CMUBright', activebackground = 'LightSkyblue1')
-        check_fixed_cursor.grid(row=7, column = 11, sticky= 'w')
+        check_fixed_cursor.grid(row=8, column = 12, sticky= 'w')
         label_x = tk.Label(self, text='Position x', font = 'CMUBright') 
         label_y = tk.Label(self, text='Position y', font = 'CMUBright') 
         entry_cut_x = tk.Entry(self, textvariable = self.var_vx, width = 6) 
         entry_cut_y = tk.Entry(self, textvariable = self.var_vy, width = 6)
         label_x.grid(row = 9, column = 10, sticky = 'e') 
-        entry_cut_x.grid(row = 9, column = 11, sticky = 'w')
-        label_y.grid(row = 9, column = 12, sticky = 'e')
-        entry_cut_y.grid(row = 9, column = 13, sticky = 'w')
+        entry_cut_x.grid(row = 9, column = 11, sticky = 'e')
+        label_y.grid(row = 9, column = 13, sticky = 'w')
+        entry_cut_y.grid(row = 9, column = 14, sticky = 'w')
 
         #  ROI  #
         label_roi=tk.Label(self, text = 'ROI:', font = 'CMUBright')
@@ -138,40 +138,41 @@ class PlotFrame(tk.Frame):
         label_xmax = tk.Label(self, text='xmax', font = 'CMUBright') 
         label_ymin = tk.Label(self, text='ymin', font = 'CMUBright')
         label_ymax = tk.Label(self, text='ymax', font = 'CMUBright')  
+        button_set_view_as_ROI = HoverButton(self, text="Set to current view", width=15, activebackground = 'LightSkyblue1', command = self.mainapp.on_set_view_as_ROI)
         entry_cut_xmin = tk.Entry(self, textvariable = self.var_xmin, width = 6)
         entry_cut_xmax= tk.Entry(self, textvariable = self.var_xmax, width = 6) 
         entry_cut_ymin = tk.Entry(self, textvariable = self.var_ymin, width = 6)
         entry_cut_ymax = tk.Entry(self, textvariable = self.var_ymax, width = 6)
-        label_roi.grid(row = 0, column = 11, sticky = 'ne')
+        label_roi.grid(row = 0, column = 12, sticky = 'n')
         label_xmin.grid(row = 1, column = 10, sticky = 'e')  
-        entry_cut_xmin.grid(row = 1, column = 11, sticky = 'w')
-        label_ymin.grid(row = 1, column = 12, sticky = 'e')
-        entry_cut_ymin.grid(row = 1, column = 13, sticky = 'w')
+        entry_cut_xmin.grid(row = 1, column = 11, sticky = 'e')
+        label_ymin.grid(row = 1, column = 13, sticky = 'w')
+        entry_cut_ymin.grid(row = 1, column = 14, sticky = 'w')
         label_xmax.grid(row = 2, column = 10, sticky = 'e')  
-        entry_cut_xmax.grid(row = 2, column = 11, sticky = 'w')
-        label_ymax.grid(row = 2, column = 12, sticky = 'e')
-        entry_cut_ymax.grid(row = 2 , column = 13, sticky = 'w')
-        button_default = HoverButton(self, text = 'Back to default', width = 20, activebackground = 'LightSkyblue1', command = self.mainapp.on_back_to_default)
-        button_default.grid(row=11, column = 11, columnspan=2, sticky= 'e')
+        entry_cut_xmax.grid(row = 2, column = 11, sticky = 'e')
+        label_ymax.grid(row = 2, column = 13, sticky = 'w')
+        entry_cut_ymax.grid(row = 2 , column = 14, sticky = 'w')
+        button_set_view_as_ROI.grid(row=3, column=12, sticky='n')
+        button_default = HoverButton(self, text = 'Back to\ndefault', width = 15, activebackground = 'LightSkyblue1', command = self.mainapp.on_back_to_default)
+        button_default.grid(row=11, column = 12, columnspan=1, sticky= 'n')
 
         #  Atom number  - Display value #
         label_atom_number_txt= tk.Label(self, text = 'Atom  number:', font = 'CMUBright' )
-        label_atom_number_txt.grid(row = 3, column = 11, columnspan = 2)#, sticky = 'w')
+        label_atom_number_txt.grid(row = 4, column = 12, columnspan = 1, sticky='n')#, sticky = 'w')
         label_atom_number= tk.Label(self, textvariable = self.var_nat, font = ('CMUBright',30), bg = 'white', height = 2, width = 10)
-        label_atom_number.grid(row = 4, column = 11, columnspan = 3, sticky = 'e') 
+        label_atom_number.grid(row = 5, column = 11, columnspan = 3, sticky='n') 
         label_abs_image = tk.Label(self, text = 'Absorption image', font = 'CMUBright')
         label_abs_image.grid(row = 0, column = 1, columnspan = 5)
         label_abs_cuts = tk.Label(self, text = 'Cuts', font = 'CMUBright')
         label_abs_cuts.grid(row = 0, column = 6, columnspan = 4)
-
         # Atom number - Option #
         check_gauss_fit = HoverCheckButton(self, text='Gaussian fit', variable = self.var_gauss_fit, font = 'CMUBright', activebackground = 'LightSkyblue1')
-        check_gauss_fit.grid(row=5, column = 11, sticky= 'w')
+        check_gauss_fit.grid(row=6, column = 12, sticky= 'w')
 
 
         # Colorbar - Option #
         check_fix_colorbar = HoverCheckButton(self, text= 'Fix colorbar', variable= self.var_fix_cbar, font = 'CMUBright', activebackground = 'LightSkyblue1')
-        check_fix_colorbar.grid(row=6, column=11, sticky='w')
+        check_fix_colorbar.grid(row=7, column=12, sticky='w')
 
 
         # Image display #

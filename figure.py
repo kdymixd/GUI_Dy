@@ -133,3 +133,7 @@ class Image_Plot:
         self.b2.set_xlim(event_ay.get_ylim())
         self.parent.canvas2.draw()
 
+    def get_lims(self):
+        xlims=self.a.get_xlim()
+        ylims=self.a.get_ylim()
+        return(xlims,ylims)

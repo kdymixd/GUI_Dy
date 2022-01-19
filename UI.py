@@ -38,7 +38,7 @@ class MainApplication(tk.Frame, folder_explorer.FolderExplorer):
         self.parent.bind("<<ImagesEvent>>", self.handle_images_event)
 
         ##############################################
-        self.start()
+        # self.start()
 
     #Callbacks
 
@@ -99,6 +99,12 @@ class MainApplication(tk.Frame, folder_explorer.FolderExplorer):
         self.analyze_image(self.fileFrame.list_images.get(0))
         self.backend.start_images_watchdog(self.day_path, new_run) #we start watching the new run dir
     
+    def on_set_view_as_ROI(self):
+        xlims, ylims=self.plotFrame.image_plot.get_lims()
+        self.plotFrame.var_xmin.set(int(xlims[0]))
+        self.plotFrame.var_xmax.set(int(xlims[1]))
+        self.plotFrame.var_ymin.set(int(ylims[0]))
+        self.plotFrame.var_ymax.set(int(ylims[1]))
     def on_back_to_default(self):
         print("on back to default")
     
