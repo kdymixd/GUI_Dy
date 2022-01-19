@@ -116,6 +116,8 @@ class PlotFrame(tk.Frame):
         self.var_ymax = tk.IntVar() 
         self.var_nat = tk.StringVar()
         self.var_fix_cbar = tk.IntVar()
+        self.var_cam_name = tk.StringVar()
+        self.var_pixel_size =tk.StringVar()
 
         #Init TkVars
         self.init_tk_vars()
@@ -155,6 +157,15 @@ class PlotFrame(tk.Frame):
         button_default = HoverButton(self, text = 'Back to\ndefault', width = 15, activebackground = 'LightSkyblue1', command = self.mainapp.on_back_to_default)
         button_default.grid(row=11, column = 12, columnspan=1, sticky= 'n')
 
+        #Camera and image information
+        label_legend_camera_name=tk.Label(self, text = 'Cam name:', font = 'CMUBright')
+        label_legend_pixel_size=tk.Label(self, text = 'Eff pixel size (µm):', font = 'CMUBright')
+        label_camera_name=tk.Label(self, textvariable=self.var_cam_name, font=("CMUBright",15))
+        label_pixel_size=tk.Label(self, textvariable=self.var_pixel_size, font=("CMUBright",15))
+        label_legend_camera_name.grid(row=12, column=10, sticky='n', pady=(40,0))
+        label_legend_pixel_size.grid(row=12, column=12, sticky='n', pady=(40,0))
+        label_camera_name.grid(row=13, column=10, sticky='n')
+        label_pixel_size.grid(row=13, column=12, sticky='n')
         #  Atom number  - Display value #
         label_atom_number_txt= tk.Label(self, text = 'Atom  number:', font = 'CMUBright' )
         label_atom_number_txt.grid(row = 4, column = 12, columnspan = 1, sticky='n')#, sticky = 'w')
@@ -175,7 +186,6 @@ class PlotFrame(tk.Frame):
 
 
         # Image display #
-
         self.image_plot = Image_Plot(self)
         self.image_plot.canvas1.get_tk_widget().grid(row = 1, column =1, rowspan = 25, columnspan = 5, sticky ='w')
         # self.image_plot.canvas1.get_tk_widget().configure(curTrue)
@@ -200,6 +210,8 @@ class PlotFrame(tk.Frame):
         VALUE_YMIN = 0 
         VALUE_YMAX = 0
         FIX_COLORBAR = 0
+        VAR_CAM_NAME = "Camera"
+        VAR_PIXEL_SIZE = "42.0"
         self.var_gauss_fit.set(GAUSS_FIT)
         self.var_fixed_cursors.set(FIXED_CURSOR)
         self.var_vx.set(str(VALUE_X))
@@ -210,3 +222,5 @@ class PlotFrame(tk.Frame):
         self.var_ymax.set(str(VALUE_YMAX))
         self.var_nat.set(str(VALUE_NAT))
         self.var_fix_cbar.set(FIX_COLORBAR)
+        self.var_cam_name.set(VAR_CAM_NAME)
+        self.var_pixel_size.set(str(VAR_PIXEL_SIZE))

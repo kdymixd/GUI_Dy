@@ -1,3 +1,4 @@
+import configparser
 import tkinter as tk 
 from scipy.constants import c
 import matplotlib
@@ -10,10 +11,8 @@ import scipy.constants as c
 from matplotlib.figure import Figure
 import tkinter as tk
 import datetime
-import os
 #local imports
 from backend import Backend
-import backend
 import folder_explorer
 from frames import FileFrame, PlotFrame, give_focus
 import config
@@ -129,6 +128,13 @@ class MainApplication(tk.Frame, folder_explorer.FolderExplorer):
         path_to_image=self.get_path_to_image(run, image)
         self.analysis=analysis.Analysis(path_to_image, self.plotFrame)
         self.analysis.plot_and_process()
+        #If the camera changed we set the labels to the new value
+        if self.analysis.camera_name!=self.plotFrame.var_cam_name.get():
+            self.plotFrame.var_cam_name.set(self.analysis.camera_name)
+            eff_pixel_size=float(config.config_parser[self.analysis.camera_name]["pixelsize"])/float(config.config_parser[self.analysis.camera_name]["magnification"])
+            self.plotFrame.var_pixel_size.set("{:.2f}".format(eff_pixel_size))
+        
+        
     def close(self):
         #What to do when closing
         print("close")

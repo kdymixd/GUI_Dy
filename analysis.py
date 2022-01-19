@@ -59,7 +59,7 @@ class Analysis:
             if file.endswith(with_atoms_suffix):
                 camera_name=file[:-len(with_atoms_suffix)] #we get the camera name from the image file
         
-        
+        self.camera_name=camera_name
         img_with_atoms=read_image(os.path.join(self.folder_path, camera_name+with_atoms_suffix)) #we load the images
         
                     
