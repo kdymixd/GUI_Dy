@@ -98,7 +98,7 @@ class FileFrame(tk.Frame):
     def init_tk_vars(self):
         #default value of variables
         LIVE_UPDATE = 1
-        self.var_day_in_list.set(self.mainapp.today)
+        self.var_day_in_list.set(self.mainapp.day)
         self.var_live_update.set(LIVE_UPDATE)
 
 class PlotFrame(tk.Frame):

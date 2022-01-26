@@ -24,10 +24,9 @@ class MainApplication(tk.Frame, folder_explorer.FolderExplorer):
         tk.Frame.__init__(self, parent, *args, **kwargs)
         self.parent = parent
         self.backend=Backend(parent)
-        ## Variables ## 
-        self.today = datetime.date.today()
-        self.day_path=None
-        self.set_day_path(config.config_parser["filesystem"]["passerelle_path"])
+        ## Variables ##
+        self.day=None
+        self.day_path = self.find_last_day(config.config_parser["filesystem"]["passerelle_path"]) #finds the path to last day where images where recorded
         ## Frames ##
         self.fileFrame=FileFrame(self.parent,self)
         self.fileFrame.grid(column= 1, row=2, sticky='ew')

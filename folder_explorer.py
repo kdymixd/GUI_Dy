@@ -1,3 +1,4 @@
+import datetime
 import os
 from tkinter.constants import S
 
@@ -23,10 +24,21 @@ def list_images(path):
 
 
 class FolderExplorer:
-
-    #sets the path where the runs are stored 
-    def set_day_path(self, paserelle_path):
-        self.day_path=os.path.join(paserelle_path,self.today.strftime('%Y'), self.today.strftime('%m'), self.today.strftime("%d"))
+    
+    #find last day where a run is present and returns the path
+    def find_last_day(self, path, depth=0):
+        if depth==3:
+            #We set the day
+            normalized_path=os.path.normpath(path)
+            day=map(int, normalized_path.split(os.path.sep)[-3:])
+            self.day=datetime.date(*list(day))
+            return path
+        try :
+            os.path.isdir(path)
+        except FileNotFoundError :
+            print("Wrong passerelle path")
+        following=max([folder for folder in os.listdir(path) if os.path.isdir(os.path.join(path,folder))])
+        return self.find_last_day(os.path.join(path, following), depth=depth+1)
     def get_path_to_image(self, run, image):
         return os.path.join(self.day_path, run, image)
     #Poll day directory get list of runs and put it in the runs listbox
