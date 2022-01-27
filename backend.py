@@ -68,7 +68,13 @@ class Backend:
             with self.images_queue.mutex:
                 self.images_queue.queue.clear()
 
-        
+    def stop_runs_watchdog(self):
+        if self.watchdog_images is not None : 
+            #If we were watching another run we terminate this run
+            self.watchdog_images.kill()
+            #We empty the queue
+            with self.images_queue.mutex:
+                self.images_queue.queue.clear()
     def notify_runs(self, event, type):
         if type == self.MONITOR_RUNS:
             self.runs_queue.put(event)

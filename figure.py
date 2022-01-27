@@ -151,13 +151,13 @@ class BlittedCursor:
 class Image_Plot: 
     def __init__(self, parent):
         self.parent= parent
-        self.f1 = Figure(figsize=(5,5), dpi=100) 
+        self.f1 = Figure(figsize=(5.5,5), dpi=100) 
         self.f2 = Figure(figsize=(4,5), dpi=100)
         self.canvas1 = FigureCanvasTkAgg(self.f1, self.parent)
         self.a = self.f1.add_subplot(111)
         self.canvas2 = FigureCanvasTkAgg(self.f2, self.parent)
-        self.im_plot=self.a.imshow(np.random.rand(100,100), cmap=greiner, origin="lower")
-        self.cb=self.f1.colorbar(self.im_plot, ax=self.a, shrink=1, orientation='horizontal')
+        self.im_plot=self.a.imshow(np.random.rand(104,140), cmap=greiner, origin="lower")
+        self.cb=self.f1.colorbar(self.im_plot, ax=self.a, shrink=0.9, orientation='horizontal')
         self.line_x=self.a.axvline(x=10, color='black', linestyle='-', linewidth=0.75)
         self.line_y=self.a.axhline(y=10, color='black', linestyle='-', linewidth=0.75)
         self.f1.tight_layout()
@@ -167,7 +167,7 @@ class Image_Plot:
         self.b2 = self.f2.add_subplot(212)
         self.y_cut,=self.b2.plot([0], [0], color = 'MidnightBlue')
         self.y_cut_fit,=self.b2.plot([0], [0], color = 'firebrick')
-        self.f2.tight_layout()
+        self.f2.tight_layout(pad=1.2)
         self.blitted_cursor=BlittedCursor(self.a, self)
         self.canvas1.mpl_connect('motion_notify_event', self.blitted_cursor.on_mouse_move_or_key_press)
         self.canvas1.mpl_connect('key_press_event', self.blitted_cursor.on_key_press)

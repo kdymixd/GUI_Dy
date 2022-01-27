@@ -25,13 +25,13 @@ class MainApplication(tk.Frame, folder_explorer.FolderExplorer):
         self.parent = parent
         self.backend=Backend(parent)
         ## Variables ##
-        self.day=None
+        self.day=datetime.date(2022,1,25)
         self.day_path = self.find_last_day(config.config_parser["filesystem"]["passerelle_path"]) #finds the path to last day where images where recorded
         ## Frames ##
         self.fileFrame=FileFrame(self.parent,self)
-        self.fileFrame.grid(column= 1, row=2, sticky='ew')
+        self.fileFrame.grid(column= 1, row=2)
         self.plotFrame= PlotFrame(self.parent,self)
-        self.plotFrame.grid(row=1, column=1, sticky='ew')
+        self.plotFrame.grid(row=1, column=1)
         self.parent.bind("<<RunsEvent>>", self.handle_runs_event)
         self.parent.bind("<<ImagesEvent>>", self.handle_images_event)
         self.parent.bind("<<CursorEvent>>", self.on_new_cursor)
@@ -136,6 +136,8 @@ class MainApplication(tk.Frame, folder_explorer.FolderExplorer):
         
     def close(self):
         #What to do when closing
+        self.backend.stop_images_watchdog()
+        self.backend.stop_runs_watchdog()
         print("close")
 
 def close():
