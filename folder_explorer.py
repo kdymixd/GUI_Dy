@@ -1,25 +1,26 @@
 import datetime
 import os
 from tkinter.constants import S
+import re
 
-
+regex_runs=re.compile("^\d{6}#") #Regex to identify run folders
 #returns list of names of sub-folders of "path" ordered by modification date
 def list_folders(path):
     list_of_folders=[]
     for folder in os.listdir(path):
         if os.path.isdir(os.path.join(path, folder )):
             list_of_folders.append(os.path.join(path, folder))
-    list_of_folders.sort(key=lambda x: os.path.getmtime(x))
+    list_of_folders.sort(key=lambda x: os.path.getmtime(x), reverse=True)
     return [os.path.basename(os.path.normpath(x)) for x in list_of_folders] #Get last directory of path
 
 #returns list of names of sub-folders of images of "path" ordered by timestamp
 def list_images(path):
     list_of_folders=[]
     for folder in os.listdir(path):
-        if os.path.isdir(os.path.join(path, folder )):
+        if os.path.isdir(os.path.join(path, folder )) and bool(regex_runs.match(folder)): #check that the name is a folder and matches the regex
             list_of_folders.append(os.path.join(path, folder))
-    list_of_folders=[os.path.basename(os.path.normpath(x)) for x in list_of_folders] 
-    list_of_folders.sort(key=lambda x: int(x.split("#")[0]), reverse=True)
+    list_of_folders=[os.path.basename(os.path.normpath(x)) for x in list_of_folders]
+    list_of_folders=list_of_folders[::-1]
     return [os.path.basename(os.path.normpath(x)) for x in list_of_folders] #Get last directory of path
 
 

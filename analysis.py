@@ -31,12 +31,32 @@ class Analysis:
         self.absorption_picture=None
         self.camera_name=None
         self.ROI=np.s_[ymin: ymax, xmin: xmax] if (ymax > ymin and xmax>xmin) else np.s_[:,:]
+        self.background=None #Background to normalize images for pixel count
+        self.background_correction=self.plotFrame.var_background_correction.get() # Wether we should do background correction
         self.fit_params=None
         self.gauss_fit=self.plotFrame.var_gauss_fit.get()
         self.cursor= [vx, vy] if self.fixed_cursor else None
         self.cbar_bounds= None
         
+    def update_analysis(self, path):
+        vx=self.plotFrame.var_vx.get()
+        vy=self.plotFrame.var_vy.get()
+        xmin=self.plotFrame.var_xmin.get()
+        ymin=self.plotFrame.var_ymin.get()
+        xmax=self.plotFrame.var_xmax.get()
+        ymax=self.plotFrame.var_ymax.get()
+        self.fixed_cursor = self.plotFrame.var_fixed_cursors.get()
+        self.fix_colorbar=self.plotFrame.var_fix_cbar.get()
+        self.folder_path=path
+        self.ROI=np.s_[ymin: ymax, xmin: xmax] if (ymax > ymin and xmax>xmin) else np.s_[:,:]
+        self.gauss_fit=self.plotFrame.var_gauss_fit.get()
+        self.cursor= [vx, vy] if self.fixed_cursor else None
+        self.background_correction=self.plotFrame.var_background_correction.get()
 
+    def set_background(self, new_selection):
+        new_selection=list(map(int, new_selection))
+        self.background=np.s_[new_selection[0]:new_selection[1], new_selection[2]:new_selection[3]]
+        
     def calculate_atom_number_count(self, pixel_size):
         return np.nansum(self.absorption_picture[self.ROI])*pixel_size**2/rb.sigma0
     def set_camera_and_absorption_picure(self):
@@ -51,6 +71,7 @@ class Analysis:
         self.absorption_picture=od
         return od
     def open_picture(self):
+        print(self.background)
         #The suffixes we have to add to the folder name to obtain the corresponding pictures 
         with_atoms_suffix="_With.png"
         no_atoms_suffix="_NoAt.png"
@@ -58,36 +79,38 @@ class Analysis:
         for file in os.listdir(self.folder_path):
             if file.endswith(with_atoms_suffix):
                 camera_name=file[:-len(with_atoms_suffix)] #we get the camera name from the image file
-        
-        self.camera_name=camera_name
         img_with_atoms=read_image(os.path.join(self.folder_path, camera_name+with_atoms_suffix)) #we load the images
         
                     
         img_no_atoms=read_image(os.path.join(self.folder_path, camera_name+no_atoms_suffix))
-        ### Remove the offest
-        # if  UseBestOffset == 1:
-        #     ratio = np.nanmean(img_no_atoms[ROIBestOffset[0]:ROIBestOffset[1],
-        #                                       ROIBestOffset[2]:ROIBestOffset[3]]
-        #                             /img_with_atoms[ROIBestOffset[0]:ROIBestOffset[1],
-        #                                      ROIBestOffset[2]:ROIBestOffset[3]])
-        #     img_no_atoms = img_no_atoms/ratio
-            # print(ratio)
-        ###
+        ## Remove the offest
+        if  (not self.gauss_fit) and (self.background is not None) and (self.background_correction):
+            ratio = np.nanmean(img_no_atoms[self.background]
+                                    /img_with_atoms[self.background])
+            img_no_atoms = img_no_atoms/ratio
+            print("Correction ratio is {}".format(ratio))
+        ##
         img_background=read_image(os.path.join(self.folder_path, camera_name+background_suffix))
         self.camera_name=camera_name
         return {"atoms": img_with_atoms, 'no atoms': img_no_atoms, 'background':img_background}
 
-    def set_cursor_and_cbar(self):
+    def set_cursor_and_cbar(self, center=None, offset=0):
         square = (1/16)*np.ones((4,4))
         if not self.fix_colorbar or not self.fixed_cursor:
-            coarse_img = scipy.signal.convolve2d(self.absorption_picture[self.ROI], square, mode = 'same')
-            max_od = np.nanmax(coarse_img)
-            min_od = np.nanmin(coarse_img)
-            ymax2, xmax2 = np.unravel_index(coarse_img.argmax(), coarse_img.shape)
-            if self.ROI[0].start is not None :
-                ymax2 = ymax2 + self.ROI[0].start
-            if self.ROI[1].start is not None :
-                xmax2 = xmax2 + self.ROI[1].start
+            if center is None: 
+                coarse_img = scipy.signal.convolve2d(self.absorption_picture[self.ROI], square, mode = 'same')
+                max_od = np.nanmax(coarse_img)
+                min_od = np.nanmin(coarse_img)
+                ymax2, xmax2 = np.unravel_index(coarse_img.argmax(), coarse_img.shape)
+                if self.ROI[0].start is not None :
+                    ymax2 = ymax2 + self.ROI[0].start
+                if self.ROI[1].start is not None :
+                    xmax2 = xmax2 + self.ROI[1].start
+            else:
+                ymax2, xmax2 = center[1], center[0]
+                max_od=self.absorption_picture[center[1], center[0]]
+                min_od=offset
+
             if not self.fixed_cursor: 
                 self.cursor = [xmax2, ymax2]
                 self.plotFrame.var_vx.set(xmax2)
@@ -98,12 +121,14 @@ class Analysis:
 
     def plot_and_process(self):
         abs_picture=self.set_camera_and_absorption_picure()
-        self.set_cursor_and_cbar()
+        if not self.gauss_fit:
+            self.set_cursor_and_cbar()
         pixel_size = float(config_parser[self.camera_name]["pixelsize"])/float(config_parser[self.camera_name]["magnification"])*1e-6
         if self.gauss_fit:
-            fitted_picture, A, sigma_x, sigma_y =self.fit_picture()
+            fitted_picture, A, center_x, center_y, sigma_x, sigma_y, offset =self.fit_picture()
             atom_number= calculate_atom_number_fit(A, sigma_x, sigma_y, pixel_size)
-            
+            self.set_cursor_and_cbar(center=[int(center_x),int(center_y)], offset=offset)
+
         else:
             fitted_picture=None
             atom_number = self.calculate_atom_number_count(pixel_size)
@@ -114,7 +139,7 @@ class Analysis:
     def fit_picture(self):
         y, x=np.indices(self.absorption_picture.shape)
         popt=fit_gaussian_2D(x[self.ROI], y[self.ROI], self.absorption_picture[self.ROI], bin=3)
-        return rot_gaussian(x, y, *popt), popt[0], popt[3], popt[4] #we return the image and A, sigma_x, sigma_y
+        return rot_gaussian(x, y, *popt), popt[0], popt[1], popt[2], popt[3], popt[4], popt[5] #we return the image and A, sigma_x, sigma_y
 
 
  #Fit functions

@@ -35,6 +35,7 @@ class MainApplication(tk.Frame, folder_explorer.FolderExplorer):
         self.parent.bind("<<RunsEvent>>", self.handle_runs_event)
         self.parent.bind("<<ImagesEvent>>", self.handle_images_event)
         self.parent.bind("<<CursorEvent>>", self.on_new_cursor)
+        self.analysis=None
 
         ##############################################
         self.start()
@@ -109,6 +110,16 @@ class MainApplication(tk.Frame, folder_explorer.FolderExplorer):
         self.plotFrame.var_vx.set(event.x)
         self.plotFrame.var_vy.set(event.y)
         self.plotFrame.image_plot.plot_new_cursor((event.x, event.y))
+
+    def on_select_new_background(self):
+        new_selection=self.plotFrame.image_plot.toggle_selector()
+        if new_selection is not None:
+            self.analysis.set_background(new_selection)
+            if self.plotFrame.show_background["state"]=="disabled":
+                self.plotFrame.show_background.configure(state=tk.NORMAL)
+                self.plotFrame.check_background_correction.configure(state=tk.NORMAL)
+    def on_show_background(self):
+        self.plotFrame.image_plot.toggle_selector(show_only=True)
     def on_back_to_default(self):
         print("on back to default")
     
@@ -125,7 +136,10 @@ class MainApplication(tk.Frame, folder_explorer.FolderExplorer):
     def analyze_image(self, image):
         run=self.fileFrame.list_runs.get(self.fileFrame.list_runs.curselection()[0])
         path_to_image=self.get_path_to_image(run, image)
-        self.analysis=analysis.Analysis(path_to_image, self.plotFrame)
+        if self.analysis is None:
+            self.analysis=analysis.Analysis(path_to_image, self.plotFrame)
+        else: 
+            self.analysis.update_analysis(path_to_image)
         self.analysis.plot_and_process()
         #If the camera changed we set the labels to the new value
         if self.analysis.camera_name!=self.plotFrame.var_cam_name.get():

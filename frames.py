@@ -1,3 +1,4 @@
+from optparse import Option
 import tkinter as tk
 from matplotlib.backends.backend_tkagg import  NavigationToolbar2Tk
 from figure import Image_Plot
@@ -108,6 +109,7 @@ class PlotFrame(tk.Frame):
         ## Tkinter Vars ##
         self.var_gauss_fit = tk.IntVar()
         self.var_fixed_cursors=tk.IntVar()
+        self.var_background_correction=tk.IntVar()
         self.var_vx=tk.IntVar()
         self.var_vy=tk.IntVar()
         self.var_xmin = tk.IntVar()
@@ -118,82 +120,103 @@ class PlotFrame(tk.Frame):
         self.var_fix_cbar = tk.IntVar()
         self.var_cam_name = tk.StringVar()
         self.var_pixel_size =tk.StringVar()
-
+        
         #Init TkVars
         self.init_tk_vars()
-        #  Cursors  #
-        check_fixed_cursor = HoverCheckButton(self, text='Fixed cursor', variable=self.var_fixed_cursors, font = 'CMUBright', activebackground = 'LightSkyblue1')
-        check_fixed_cursor.grid(row=8, column = 12, sticky= 'w')
-        label_x = tk.Label(self, text='Position x', font = 'CMUBright') 
-        label_y = tk.Label(self, text='Position y', font = 'CMUBright') 
-        entry_cut_x = tk.Entry(self, textvariable = self.var_vx, width = 6) 
-        entry_cut_y = tk.Entry(self, textvariable = self.var_vy, width = 6)
-        label_x.grid(row = 9, column = 10, sticky = 'e') 
-        entry_cut_x.grid(row = 9, column = 11, sticky = 'e')
-        label_y.grid(row = 9, column = 13, sticky = 'w')
-        entry_cut_y.grid(row = 9, column = 14, sticky = 'w')
+
+        #We create the labelframes that will contain our widgets
+        self.ROI_frame=tk.LabelFrame(self, text="ROI")
+        self.Nat_frame=tk.LabelFrame(self, text="Atom number")
+        self.Option_frame=tk.Frame(self)
+        self.Cursor_frame=tk.LabelFrame(self, text="Cursor")
+        self.Camera_frame=tk.Frame(self)
+        self.Background_frame=tk.LabelFrame(self, text="Background for pixel count")
+        frames_padding=20
+        self.ROI_frame.grid(row=1, column=10, sticky="we", padx=(frames_padding,0))
+        self.Cursor_frame.grid(row=2, column=10, sticky="we", padx=(frames_padding,0))
+        self.Nat_frame.grid(row=3, column=10, sticky="we", padx=(frames_padding,0))
+        self.Background_frame.grid(row=4, column=10, padx=(frames_padding,0))
+        self.Option_frame.grid(row=5, column=10, padx=(frames_padding,0))
+        self.Camera_frame.grid(row=6, column=10, padx=(frames_padding,0))
+        
 
         #  ROI  #
-        label_roi=tk.Label(self, text = 'ROI:', font = 'CMUBright')
-        label_xmin = tk.Label(self, text='xmin', font = 'CMUBright')
-        label_xmax = tk.Label(self, text='xmax', font = 'CMUBright') 
-        label_ymin = tk.Label(self, text='ymin', font = 'CMUBright')
-        label_ymax = tk.Label(self, text='ymax', font = 'CMUBright')  
-        button_set_view_as_ROI = HoverButton(self, text="Set to current view", width=15, activebackground = 'LightSkyblue1', command = self.mainapp.on_set_view_as_ROI)
-        entry_cut_xmin = tk.Entry(self, textvariable = self.var_xmin, width = 6)
-        entry_cut_xmax= tk.Entry(self, textvariable = self.var_xmax, width = 6) 
-        entry_cut_ymin = tk.Entry(self, textvariable = self.var_ymin, width = 6)
-        entry_cut_ymax = tk.Entry(self, textvariable = self.var_ymax, width = 6)
-        label_roi.grid(row = 0, column = 12, sticky = 'n')
-        label_xmin.grid(row = 1, column = 10, sticky = 'e')  
-        entry_cut_xmin.grid(row = 1, column = 11, sticky = 'e')
-        label_ymin.grid(row = 1, column = 13, sticky = 'w')
-        entry_cut_ymin.grid(row = 1, column = 14, sticky = 'w')
-        label_xmax.grid(row = 2, column = 10, sticky = 'e')  
-        entry_cut_xmax.grid(row = 2, column = 11, sticky = 'e')
-        label_ymax.grid(row = 2, column = 13, sticky = 'w')
-        entry_cut_ymax.grid(row = 2 , column = 14, sticky = 'w')
-        button_set_view_as_ROI.grid(row=3, column=12, sticky='n')
+        self.label_xmin = tk.Label(self.ROI_frame, text='xmin', font = 'CMUBright')
+        self.label_xmax = tk.Label(self.ROI_frame, text='xmax', font = 'CMUBright') 
+        self.label_ymin = tk.Label(self.ROI_frame, text='ymin', font = 'CMUBright')
+        self.label_ymax = tk.Label(self.ROI_frame, text='ymax', font = 'CMUBright')  
+        self.button_set_view_as_ROI = HoverButton(self.ROI_frame, text="Set to current view", width=15, activebackground = 'LightSkyblue1', command = self.mainapp.on_set_view_as_ROI)
+        self.entry_cut_xmin = tk.Entry(self.ROI_frame, textvariable = self.var_xmin, width = 6)
+        self.entry_cut_xmax= tk.Entry(self.ROI_frame, textvariable = self.var_xmax, width = 6) 
+        self.entry_cut_ymin = tk.Entry(self.ROI_frame, textvariable = self.var_ymin, width = 6)
+        self.entry_cut_ymax = tk.Entry(self.ROI_frame, textvariable = self.var_ymax, width = 6)
+        self.label_xmin.grid(row = 0, column = 0, sticky = 'w')  
+        self.entry_cut_xmin.grid(row = 0, column = 1, sticky = 'w')
+        self.label_ymin.grid(row = 0, column = 3, sticky = 'e')
+        self.entry_cut_ymin.grid(row =0 , column = 4, sticky = 'e')
+        self.label_xmax.grid(row = 1, column = 0, sticky = 'w')  
+        self.entry_cut_xmax.grid(row = 1, column = 1, sticky = 'w')
+        self.label_ymax.grid(row = 1, column = 3, sticky = 'e')
+        self.entry_cut_ymax.grid(row = 1 , column = 4, sticky = 'e')
+        self.button_set_view_as_ROI.grid(row=2, column=2,columnspan=2, sticky='n')
+        self.ROI_frame.grid_columnconfigure(2, weight=10)
         button_default = HoverButton(self, text = 'Back to\ndefault', width = 15, activebackground = 'LightSkyblue1', command = self.mainapp.on_back_to_default)
-        button_default.grid(row=11, column = 12, columnspan=1, sticky= 'n')
+        # button_default.grid(row=11, column = 12, columnspan=1, sticky= 'n')
 
+        #  Cursor #
+        self.label_x = tk.Label(self.Cursor_frame, text='Position x', font = 'CMUBright') 
+        self.label_y = tk.Label(self.Cursor_frame, text='Position y', font = 'CMUBright') 
+        self.entry_cut_x = tk.Entry(self.Cursor_frame, textvariable = self.var_vx, width = 6) 
+        self.entry_cut_y = tk.Entry(self.Cursor_frame, textvariable = self.var_vy, width = 6)
+        self.label_x.pack(side="left") 
+        self.entry_cut_x.pack(side="left")
+        self.entry_cut_y.pack(side="right")
+        self.label_y.pack(side="right")
         #Camera and image information
-        label_legend_camera_name=tk.Label(self, text = 'Cam name:', font = 'CMUBright')
-        label_legend_pixel_size=tk.Label(self, text = 'Eff pixel size (µm):', font = 'CMUBright')
-        label_camera_name=tk.Label(self, textvariable=self.var_cam_name, font=("CMUBright",15))
-        label_pixel_size=tk.Label(self, textvariable=self.var_pixel_size, font=("CMUBright",15))
-        label_legend_camera_name.grid(row=12, column=10, sticky='n', pady=(40,0))
-        label_legend_pixel_size.grid(row=12, column=12, sticky='n', pady=(40,0))
-        label_camera_name.grid(row=13, column=10, sticky='n')
-        label_pixel_size.grid(row=13, column=12, sticky='n')
-        #  Atom number  - Display value #
-        label_atom_number_txt= tk.Label(self, text = 'Atom  number:', font = 'CMUBright' )
-        label_atom_number_txt.grid(row = 4, column = 12, columnspan = 1, sticky='n')#, sticky = 'w')
-        label_atom_number= tk.Label(self, textvariable = self.var_nat, font = ('CMUBright',30), bg = 'white', height = 2, width = 10)
-        label_atom_number.grid(row = 5, column = 11, columnspan = 3, sticky='n') 
-        label_abs_image = tk.Label(self, text = 'Absorption image', font = 'CMUBright')
-        label_abs_image.grid(row = 0, column = 1, columnspan = 5)
-        label_abs_cuts = tk.Label(self, text = 'Cuts', font = 'CMUBright')
-        label_abs_cuts.grid(row = 0, column = 6, columnspan = 4)
-        # Atom number - Option #
-        check_gauss_fit = HoverCheckButton(self, text='Gaussian fit', variable = self.var_gauss_fit, font = 'CMUBright', activebackground = 'LightSkyblue1')
-        check_gauss_fit.grid(row=6, column = 12, sticky= 'w')
+        self.label_legend_camera_name=tk.Label(self.Camera_frame, text = 'Cam name:', font = 'CMUBright')
+        self.label_legend_pixel_size=tk.Label(self.Camera_frame, text = 'Eff pixel size (µm):', font = 'CMUBright')
+        self.label_camera_name=tk.Label(self.Camera_frame, textvariable=self.var_cam_name, font=("CMUBright",15))
+        self.label_pixel_size=tk.Label(self.Camera_frame, textvariable=self.var_pixel_size, font=("CMUBright",15))
+        self.label_legend_camera_name.grid(row=0, column=0, sticky='n', padx=(0,10))
+        self.label_legend_pixel_size.grid(row=0, column=1, sticky='n', padx=(10,0))
+        self.label_camera_name.grid(row=1, column=0, sticky='n')
+        self.label_pixel_size.grid(row=1, column=1, sticky='n')
+        # Nat #
+        self.label_atom_number= tk.Label(self.Nat_frame, textvariable = self.var_nat, font = ('CMUBright',30), bg = 'white', height = 2, width = 10)
+        self.label_atom_number.pack(fill=tk.BOTH)
+        
+        # Options #
+        self.check_gauss_fit = HoverCheckButton(self.Option_frame, text='Gaussian fit', variable = self.var_gauss_fit, font = 'CMUBright', activebackground = 'LightSkyblue1')
+        self.check_fix_colorbar = HoverCheckButton(self.Option_frame, text= 'Fix colorbar', variable= self.var_fix_cbar, font = 'CMUBright', activebackground = 'LightSkyblue1')
+        self.check_fixed_cursor = HoverCheckButton(self.Option_frame, text='Fixed cursor', variable=self.var_fixed_cursors, font = 'CMUBright', activebackground = 'LightSkyblue1')
+        self.check_background_correction = HoverCheckButton(self.Option_frame, text='Background correction', variable=self.var_background_correction,font = 'CMUBright', activebackground = 'LightSkyblue1', state=tk.DISABLED)
+        self.check_gauss_fit.grid(row=0, column = 0, sticky= 'w')
+        self.check_fix_colorbar.grid(row=1, column=0, sticky='w')
+        self.check_fixed_cursor.grid(row=2, column = 0, sticky= 'w')
+        self.check_background_correction.grid(row=3, column=0, sticky='w')
 
-
-        # Colorbar - Option #
-        check_fix_colorbar = HoverCheckButton(self, text= 'Fix colorbar', variable= self.var_fix_cbar, font = 'CMUBright', activebackground = 'LightSkyblue1')
-        check_fix_colorbar.grid(row=7, column=12, sticky='w')
-
+        # Background selection #
+        self.select_background = HoverButton(self.Background_frame, text='Select new background', command=self.mainapp.on_select_new_background)
+        self.show_background = HoverButton(self.Background_frame, text='Show current background', state=tk.DISABLED, command=self.mainapp.on_show_background)
+        self.select_background.pack(side="left")
+        self.show_background.pack(side="right")
 
         # Image display #
+        # self.grid_columnconfigure(1, weight=30)
+        # self.grid_columnconfigure(2, weight=30)
+        # self.grid_rowconfigure(15, weight=30)
+        self.label_abs_image = tk.Label(self, text = 'Absorption image', font = 'CMUBright')
+        self.label_abs_image.grid(row = 0, column = 1)
+        self.label_abs_cuts = tk.Label(self, text = 'Cuts', font = 'CMUBright')
+        self.label_abs_cuts.grid(row = 0, column = 2)
         self.image_plot = Image_Plot(self)
-        self.image_plot.canvas1.get_tk_widget().grid(row = 1, column =1, rowspan = 25, columnspan = 5, sticky ='w')
+        self.image_plot.canvas1.get_tk_widget().grid(row = 1, column =1, rowspan = 25, sticky ='w')
         # self.image_plot.canvas1.get_tk_widget().configure(curTrue)
         self.image_plot.canvas1.draw()
         self.toolbarFrame = tk.Frame(master=self)
-        self.toolbarFrame.grid(row=32,column=1, columnspan = 6, sticky ='w')
+        self.toolbarFrame.grid(row=32,column=1, columnspan=2,sticky ='w')
         self.toolbar = NavigationToolbar2Tk(self.image_plot.canvas1, self.toolbarFrame)      
-        self.image_plot.canvas2.get_tk_widget().grid(row = 1, column =6, rowspan = 25, columnspan = 4)#, sticky ='w')
+        self.image_plot.canvas2.get_tk_widget().grid(row = 1, column =2, rowspan = 25)#, sticky ='w')
         # self.image_plot.canvas2.get_tk_widget().configure(takefocus=True)
         self.image_plot.canvas2.draw()
         self.image_plot.canvas1.get_tk_widget().bind("<Enter>", give_focus) #give focus to plot when mouse pointer on it 
@@ -210,10 +233,12 @@ class PlotFrame(tk.Frame):
         VALUE_YMIN = 0 
         VALUE_YMAX = 0
         FIX_COLORBAR = 0
+        BACKGROUND_CORRECTION = 0
         VAR_CAM_NAME = "Camera"
         VAR_PIXEL_SIZE = "42.0"
         self.var_gauss_fit.set(GAUSS_FIT)
         self.var_fixed_cursors.set(FIXED_CURSOR)
+        self.var_background_correction.set(BACKGROUND_CORRECTION)
         self.var_vx.set(str(VALUE_X))
         self.var_vy.set(str(VALUE_Y))
         self.var_xmin.set(str(VALUE_XMIN))

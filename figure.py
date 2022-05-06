@@ -1,6 +1,8 @@
+from matplotlib.pyplot import show
 import numpy as np
 from matplotlib.colors import ListedColormap
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+from matplotlib.widgets import RectangleSelector
 GREINER_CM = [
     [1.0000, 1.0000, 1.0000, 1.0000],
     [0.9474, 0.9474, 1.0000, 1.0000],
@@ -228,3 +230,32 @@ class Image_Plot:
     
     def set_cursor(self,x,y):
         self.parent.master.event_generate("<<CursorEvent>>",x=x, y=y, when="tail")
+
+    def selection_callback(self, eclick, erelease):
+        """
+        Callback for line selection.
+
+        *eclick* and *erelease* are the press and release events.
+        """
+        for _ in range(4):
+            self.current_selection[0]=eclick.ydata
+            self.current_selection[1]=erelease.ydata
+            self.current_selection[2]=eclick.xdata
+            self.current_selection[3]=erelease.xdata
+
+    def toggle_selector(self, show_only=False):
+        if self.selector.visible:
+            self.selector.set_visible(False)
+            if show_only:
+                self.selector.update()
+                return None 
+            self.selector.set_active(False)
+            self.selector.update()
+            return self.current_selection
+        else:
+            self.selector.set_visible(True)
+            if show_only:
+                self.selector.update()
+                return None
+            self.selector.set_active(True)
+            return None
