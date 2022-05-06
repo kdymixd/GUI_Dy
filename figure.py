@@ -170,12 +170,21 @@ class Image_Plot:
         self.y_cut,=self.b2.plot([0], [0], color = 'MidnightBlue')
         self.y_cut_fit,=self.b2.plot([0], [0], color = 'firebrick')
         self.f2.tight_layout(pad=1.2)
+        self.selector=RectangleSelector(self.a, self.selection_callback, useblit=True,
+        button=[1, 3],  # disable middle button
+        minspanx=5, minspany=5,
+        spancoords='data',
+        interactive=True)
+        self.selector.set_active(False)
+        self.selector.set_visible(False)
+        self.current_selection=[0,0,0,0]
         self.blitted_cursor=BlittedCursor(self.a, self)
         self.canvas1.mpl_connect('motion_notify_event', self.blitted_cursor.on_mouse_move_or_key_press)
         self.canvas1.mpl_connect('key_press_event', self.blitted_cursor.on_key_press)
         self.canvas1.mpl_connect('button_press_event', self.blitted_cursor.on_button_press)
         self.a.callbacks.connect('xlim_changed', self.on_xlims_change)
         self.a.callbacks.connect('ylim_changed', self.on_ylims_change)
+    
 
     def plot_im(self,im, cursor, cbar_bounds, fitted_picture):
         im_shape=im.shape
