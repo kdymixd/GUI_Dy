@@ -17,16 +17,20 @@ import folder_explorer
 from frames import FileFrame, PlotFrame, give_focus
 import config
 import analysis
-
+import os
+import time
 
 class MainApplication(tk.Frame, folder_explorer.FolderExplorer):
-    def __init__(self, parent, *args, **kwargs):
+    def __init__(self, parent, day=None,*args, **kwargs):
         tk.Frame.__init__(self, parent, *args, **kwargs)
         self.parent = parent
         self.backend=Backend(parent)
         ## Variables ##
-        self.day=datetime.date(2022,1,25)
-        self.day_path = self.find_last_day(config.config_parser["filesystem"]["passerelle_path"]) #finds the path to last day where images where recorded
+        self.day=day
+        if self.day is None:
+            self.day_path = self.find_last_day(config.config_parser["filesystem"]["passerelle_path"]) #finds the path to last day where images where recorded
+        else :
+            self.day_path = config.config_parser["filesystem"]["passerelle_path"] +os.path.sep+self.day.__str__().replace("-", os.path.sep)
         ## Frames ##
         self.fileFrame=FileFrame(self.parent,self)
         self.fileFrame.grid(column= 1, row=2)
@@ -92,13 +96,37 @@ class MainApplication(tk.Frame, folder_explorer.FolderExplorer):
     def on_new_run_selected(self, event):
         index_new_run=self.fileFrame.list_runs.curselection()[0]
         new_run=self.fileFrame.list_runs.get(index_new_run)
+        start_time=time.time()
         self.backend.stop_images_watchdog() #we stop the previous watch on previous run dir
+        print(f"Time to stop watchdog: {time.time()-start_time:} s")
+        start_time=time.time()
         self.init_images() #we initialize the images
+        print(f"Time to init images: {time.time()-start_time:} s")
         self.fileFrame.list_images.selection_clear(0,'end')
         self.fileFrame.list_images.selection_set(0)
+        start_time=time.time()
         self.analyze_image(self.fileFrame.list_images.get(0))
+        print(f"Time to analyze first image: {time.time()-start_time:} s")
+        start_time=time.time()
         self.backend.start_images_watchdog(self.day_path, new_run) #we start watching the new run dir
+        print(f"Time to start watchdog: {time.time()-start_time:} s")
     
+    #Put name of selected image in clipboard when right click
+    def copy_image_selection(self, event):
+        index_image_name=self.fileFrame.list_images.curselection()[0]
+        image_name=self.fileFrame.list_images.get(index_image_name)
+        print(image_name)
+        self.parent.clipboard_clear()
+        self.parent.clipboard_append(image_name)
+
+    #Put name of selected run in clipboard when right click
+    def copy_run_selection(self, event):
+        index_image_name=self.fileFrame.list_runs.curselection()[0]
+        image_name=self.fileFrame.list_runs.get(index_image_name)
+        print(image_name)
+        self.parent.clipboard_clear()
+        self.parent.clipboard_append(image_name)
+
     def on_set_view_as_ROI(self):
         xlims, ylims=self.plotFrame.image_plot.get_lims()
         self.plotFrame.var_xmin.set(int(xlims[0]))
@@ -130,8 +158,18 @@ class MainApplication(tk.Frame, folder_explorer.FolderExplorer):
         print("on last image")
 
     def on_browse(self):
-        #create a new window to enter date make sure the folder exists, close window and change self.today, reload everything
-        print("on browse")
+        selected_path=tk.filedialog.askdirectory(initialdir=config.config_parser["filesystem"]["passerelle_path"], title="Select run", mustexist=True )
+        selected_path=os.path.normpath(selected_path)
+        splitted=selected_path.split(os.path.sep)
+        print(splitted)
+        try: 
+            day=datetime.date(int(splitted[-3]),int(splitted[-2]), int(splitted[-1]))
+        except:
+            tk.messagebox.showerror(title="Error",message="{}\nis not a valid run path".format(selected_path))
+            return
+        self.close()
+        self.parent.destroy()
+        new_window(day)
 
     def analyze_image(self, image):
         run=self.fileFrame.list_runs.get(self.fileFrame.list_runs.curselection()[0])
@@ -154,13 +192,18 @@ class MainApplication(tk.Frame, folder_explorer.FolderExplorer):
         self.backend.stop_runs_watchdog()
         print("close")
 
-def close():
-    main.close()
-    root.destroy()
-if __name__ == "__main__":
+
+
+def new_window(day=None): 
+    def close():
+        main.close()
+        root.destroy()
     root = tk.Tk()
-    main=MainApplication(root)
+    main=MainApplication(root, day)
     root.title("La puissance du GUI")
     #Close everything when window is closed
     root.protocol("WM_DELETE_WINDOW",close)
     root.mainloop()
+if __name__ == "__main__":
+    new_window()
+        

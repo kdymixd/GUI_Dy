@@ -66,6 +66,7 @@ class FileFrame(tk.Frame):
         self.list_runs.bind('<Enter>', give_focus)
         self.list_runs.bind("<Button-1>", give_focus)
         self.list_runs.bind('<<ListboxSelect>>', self.mainapp.on_new_run_selected)
+        self.list_runs.bind("<Button-3>", self.mainapp.copy_run_selection)
         # List images and its scrollbars #
         self.label_list_images = tk.Label(self, text = 'List images', font = 'CMUBright')
         self.label_day_in_list = tk.Label(self, font = 'CMUBright',textvariable=self.var_day_in_list)
@@ -82,6 +83,7 @@ class FileFrame(tk.Frame):
         self.list_images.bind('<Enter>', give_focus)
         self.list_images.bind("<Button-1>", give_focus)
         self.list_images.bind('<<ListboxSelect>>', self.mainapp.on_new_image_selected)
+        self.list_images.bind("<Button-3>", self.mainapp.copy_image_selection)
         # List options #
         check_live_update = HoverCheckButton(self, text='Display new', variable=self.var_live_update, font = 'CMUBright', activebackground = 'LightSkyblue1')
         check_live_update.grid(row=7, column = 6, columnspan=2, sticky= 'w')

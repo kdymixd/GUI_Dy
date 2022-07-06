@@ -138,7 +138,7 @@ class Analysis:
     
     def fit_picture(self):
         y, x=np.indices(self.absorption_picture.shape)
-        popt=fit_gaussian_2D(x[self.ROI], y[self.ROI], self.absorption_picture[self.ROI], bin=3)
+        popt=fit_gaussian_2D(x[self.ROI], y[self.ROI], self.absorption_picture[self.ROI], bin=5)
         return rot_gaussian(x, y, *popt), popt[0], popt[1], popt[2], popt[3], popt[4], popt[5] #we return the image and A, sigma_x, sigma_y
 
 
