@@ -2,6 +2,7 @@ import datetime
 import os
 from tkinter.constants import S
 import re
+import time 
 
 regex_runs=re.compile("^\d{6}#") #Regex to identify run folders
 #returns list of names of sub-folders of "path" ordered by modification date
@@ -16,12 +17,13 @@ def list_folders(path):
 #returns list of names of sub-folders of images of "path" ordered by timestamp
 def list_images(path):
     list_of_folders=[]
-    for folder in os.listdir(path):
-        if os.path.isdir(os.path.join(path, folder )) and bool(regex_runs.match(folder)): #check that the name is a folder and matches the regex
-            list_of_folders.append(os.path.join(path, folder))
-    list_of_folders=[os.path.basename(os.path.normpath(x)) for x in list_of_folders]
+    start_time=time.time()
+    for folder in os.scandir(path):
+        if bool(regex_runs.match(folder.name)) and folder.is_dir() : #check that the name is a folder and matches the regex
+            list_of_folders.append(folder.name)
+    print(f"Time to run through folders: {time.time()-start_time:} s")
     list_of_folders=list_of_folders[::-1]
-    return [os.path.basename(os.path.normpath(x)) for x in list_of_folders] #Get last directory of path
+    return list_of_folders #Get last directory of path
 
 
 class FolderExplorer:
