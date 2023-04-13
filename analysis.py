@@ -28,13 +28,14 @@ class Analysis:
         self.fixed_cursor = self.plotFrame.var_fixed_cursors.get()
         self.fix_colorbar=self.plotFrame.var_fix_cbar.get()
         self.folder_path=path
-        self.absorption_picture=None
+        self.picture=None
         self.camera_name=None
         self.ROI=np.s_[ymin: ymax, xmin: xmax] if (ymax > ymin and xmax>xmin) else np.s_[:,:]
         self.background=None #Background to normalize images for pixel count
         self.background_correction=self.plotFrame.var_background_correction.get() # Wether we should do background correction
         self.fit_params=None
         self.gauss_fit=self.plotFrame.var_gauss_fit.get()
+        self.imaging_type=self.plotFrame.var_imaging_type.get()
         self.cursor= [vx, vy] if self.fixed_cursor else None
         self.cbar_bounds= None
         
@@ -50,6 +51,7 @@ class Analysis:
         self.folder_path=path
         self.ROI=np.s_[ymin: ymax, xmin: xmax] if (ymax > ymin and xmax>xmin) else np.s_[:,:]
         self.gauss_fit=self.plotFrame.var_gauss_fit.get()
+        self.imaging_type=self.plotFrame.var_imaging_type.get()
         self.cursor= [vx, vy] if self.fixed_cursor else None
         self.background_correction=self.plotFrame.var_background_correction.get()
 
@@ -58,47 +60,77 @@ class Analysis:
         self.background=np.s_[new_selection[0]:new_selection[1], new_selection[2]:new_selection[3]]
         
     def calculate_atom_number_count(self, pixel_size):
-        return np.nansum(self.absorption_picture[self.ROI])*pixel_size**2/rb.sigma0
-    def set_camera_and_absorption_picure(self):
-        threshold=0.02
-        dict_pictures=self.open_picture()
-        transmission=(dict_pictures["atoms"]-dict_pictures["background"])/(dict_pictures["no atoms"]-dict_pictures["background"])
-        burned_pixels=transmission <=0
-        transmission[burned_pixels] = float("nan")
-        bad_pixels=dict_pictures["no atoms"]<np.nanmax(dict_pictures["no atoms"])*threshold
-        transmission[bad_pixels] = float("nan")
-        od = np.nan_to_num(-np.log(transmission), nan=np.nan, posinf=np.nan, neginf=np.nan)
-        self.absorption_picture=od
-        return od
-    def open_picture(self):
-        print(self.background)
-        #The suffixes we have to add to the folder name to obtain the corresponding pictures 
-        with_atoms_suffix="_With.png"
-        no_atoms_suffix="_NoAt.png"
-        background_suffix="_Bgd.png"
-        for file in os.listdir(self.folder_path):
-            if file.endswith(with_atoms_suffix):
-                camera_name=file[:-len(with_atoms_suffix)] #we get the camera name from the image file
-        img_with_atoms=read_image(os.path.join(self.folder_path, camera_name+with_atoms_suffix)) #we load the images
+        if self.imaging_type=="Absorption":
+            return np.nansum(self.picture[self.ROI])*pixel_size**2/rb.sigma0
+        elif self.imaging_type=="Fluorescence":
+            return np.nansum(self.picture[self.ROI])/float(config_parser[self.camera_name]["quantum_efficency"])/float(config_parser[self.camera_name]["digital_multiply"])
+
+    def set_camera_and_picture(self):
+        if self.imaging_type=="Absorption":
+            threshold=0.02
+            dict_pictures=self.open_absorption_picture()
+            transmission=(dict_pictures["atoms"]-dict_pictures["background"])/(dict_pictures["no atoms"]-dict_pictures["background"])
+            #transmission=dict_pictures["atoms"]/dict_pictures["no atoms"]
+            burned_pixels=transmission <=0
+            #transmission[burned_pixels] = float("nan")
+            #bad_pixels=dict_pictures["no atoms"]<np.nanmax(dict_pictures["no atoms"])*threshold
+            #transmission[bad_pixels] = float("nan")
+            od = np.nan_to_num(-np.log(transmission), nan=np.nan, posinf=np.nan, neginf=np.nan)
+            self.picture=od
+            return od
+        elif self.imaging_type=="Fluorescence":
+            dict_pictures=self.open_absorption_picture()
+            od = dict_pictures["atoms"]-dict_pictures["no atoms"] #np.nan_to_num(dict_pictures["atoms"], nan=np.nan, posinf=np.nan, neginf=np.nan)
+            #od = od % 2**16
+            od = np.where(od>65000, 0, od)
+            self.picture= np.divide(od, float(config_parser[self.camera_name]["quantum_efficency"])*float(config_parser[self.camera_name]["digital_multiply"]))
+            return od
         
-                    
-        img_no_atoms=read_image(os.path.join(self.folder_path, camera_name+no_atoms_suffix))
-        ## Remove the offest
-        if  (not self.gauss_fit) and (self.background is not None) and (self.background_correction):
-            ratio = np.nanmean(img_no_atoms[self.background]
-                                    /img_with_atoms[self.background])
-            img_no_atoms = img_no_atoms/ratio
-            print("Correction ratio is {}".format(ratio))
-        ##
-        img_background=read_image(os.path.join(self.folder_path, camera_name+background_suffix))
-        self.camera_name=camera_name
+    def open_absorption_picture(self):
+        #print(self.background)
+        #The suffixes we have to add to the folder name to obtain the corresponding pictures 
+
+        if (self.folder_path.split("#")[1] == "Princeton") or (self.folder_path.split("#")[2] == "Princeton"):
+            self.camera_name="Princeton"
+            with_atoms_suffix="frames_0001.tiff"
+            no_atoms_suffix="frames_0002.tiff"
+            background_suffix="frames_0000.tiff"
+            img_with_atoms=read_image(os.path.join(self.folder_path, with_atoms_suffix)) #we load the images
+            img_no_atoms=read_image(os.path.join(self.folder_path, no_atoms_suffix))
+            # Remove the offest
+            if  (not self.gauss_fit) and (self.background is not None) and (self.background_correction):
+                ratio = np.nanmean(img_no_atoms[self.background]
+                                        /img_with_atoms[self.background])
+                img_no_atoms = img_no_atoms/ratio
+                print("Correction ratio is {}".format(ratio))
+            #img_background=read_image(os.path.join(self.folder_path, background_suffix))
+            img_background=cv.imread("bg.tiff", cv.IMREAD_UNCHANGED)
+
+        else:
+            with_atoms_suffix="_With.png"
+            no_atoms_suffix="_NoAt.png"
+            background_suffix="_Bgd.png"
+            for file in os.listdir(self.folder_path):
+                if file.endswith(with_atoms_suffix):
+                    self.camera_name=file[:-len(with_atoms_suffix)] #we get the camera name from the image file
+
+            img_with_atoms=read_image(os.path.join(self.folder_path, self.camera_name+with_atoms_suffix)) #we load the images
+            img_no_atoms=read_image(os.path.join(self.folder_path, self.camera_name+no_atoms_suffix))
+            # Remove the offest
+            if  (not self.gauss_fit) and (self.background is not None) and (self.background_correction):
+                ratio = np.nanmean(img_no_atoms[self.background]
+                                        /img_with_atoms[self.background])
+                img_no_atoms = img_no_atoms/ratio
+                print("Correction ratio is {}".format(ratio))
+            img_background=read_image(os.path.join(self.folder_path, self.camera_name+background_suffix))
+
         return {"atoms": img_with_atoms, 'no atoms': img_no_atoms, 'background':img_background}
 
     def set_cursor_and_cbar(self, center=None, offset=0):
-        square = (1/16)*np.ones((4,4))
+        square = (1/4)*np.ones((2,2))
         if not self.fix_colorbar or not self.fixed_cursor:
             if center is None: 
-                coarse_img = scipy.signal.convolve2d(self.absorption_picture[self.ROI], square, mode = 'same')
+                coarse_img = scipy.signal.convolve2d(self.picture[self.ROI], square, mode = 'same')
                 max_od = np.nanmax(coarse_img)
                 min_od = np.nanmin(coarse_img)
                 ymax2, xmax2 = np.unravel_index(coarse_img.argmax(), coarse_img.shape)
@@ -108,7 +140,7 @@ class Analysis:
                     xmax2 = xmax2 + self.ROI[1].start
             else:
                 ymax2, xmax2 = center[1], center[0]
-                max_od=self.absorption_picture[center[1], center[0]]
+                max_od=self.picture[center[1], center[0]]
                 min_od=offset
 
             if not self.fixed_cursor: 
@@ -120,13 +152,13 @@ class Analysis:
             
 
     def plot_and_process(self):
-        abs_picture=self.set_camera_and_absorption_picure()
+        picture=self.set_camera_and_picture()
         if not self.gauss_fit:
             self.set_cursor_and_cbar()
         pixel_size = float(config_parser[self.camera_name]["pixelsize"])/float(config_parser[self.camera_name]["magnification"])*1e-6
         if self.gauss_fit:
             fitted_picture, A, center_x, center_y, sigma_x, sigma_y, offset =self.fit_picture()
-            atom_number= calculate_atom_number_fit(A, sigma_x, sigma_y, pixel_size)
+            atom_number= self.calculate_atom_number_fit(A, sigma_x, sigma_y, pixel_size, self.imaging_type)
             self.set_cursor_and_cbar(center=[int(center_x),int(center_y)], offset=offset)
 
         else:
@@ -134,13 +166,19 @@ class Analysis:
             atom_number = self.calculate_atom_number_count(pixel_size)
         
         self.plotFrame.var_nat.set("{:.2e}".format(atom_number))
-        self.plotFrame.image_plot.plot_im(abs_picture, cursor=self.cursor, cbar_bounds=self.cbar_bounds, fitted_picture=fitted_picture)
+        self.plotFrame.image_plot.plot_im(picture, cursor=self.cursor, cbar_bounds=self.cbar_bounds, fitted_picture=fitted_picture)
     
     def fit_picture(self):
-        y, x=np.indices(self.absorption_picture.shape)
-        popt=fit_gaussian_2D(x[self.ROI], y[self.ROI], self.absorption_picture[self.ROI], bin=5)
+        y, x=np.indices(self.picture.shape)
+        popt=fit_gaussian_2D(x[self.ROI], y[self.ROI], self.picture[self.ROI], bin=2)
         return rot_gaussian(x, y, *popt), popt[0], popt[1], popt[2], popt[3], popt[4], popt[5] #we return the image and A, sigma_x, sigma_y
 
+
+    def calculate_atom_number_fit(self, A, sigma_x, sigma_y, pixel_size, imaging_type):
+        if imaging_type=="Absorption":
+            return A*2*np.pi*sigma_x*sigma_y*pixel_size**2/rb.sigma0
+        elif imaging_type=="Fluorescence":
+            return A*2*np.pi*sigma_x*sigma_y/float(config_parser[self.camera_name]["quantum_efficency"])/float(config_parser[self.camera_name]["digital_multiply"])
 
  #Fit functions
 
@@ -220,7 +258,3 @@ def fit_gaussian_2D(x,y,z,bin=1, angle=None):
         empty_array[:]=np.NAN
         return empty_array
     
-
-
-def calculate_atom_number_fit(A, sigma_x, sigma_y, pixel_size):
-    return A*2*np.pi*sigma_x*sigma_y*pixel_size**2/rb.sigma0

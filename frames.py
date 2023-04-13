@@ -112,6 +112,7 @@ class PlotFrame(tk.Frame):
         self.var_gauss_fit = tk.IntVar()
         self.var_fixed_cursors=tk.IntVar()
         self.var_background_correction=tk.IntVar()
+        self.var_imaging_type=tk.StringVar()
         self.var_vx=tk.IntVar()
         self.var_vy=tk.IntVar()
         self.var_xmin = tk.IntVar()
@@ -122,7 +123,7 @@ class PlotFrame(tk.Frame):
         self.var_fix_cbar = tk.IntVar()
         self.var_cam_name = tk.StringVar()
         self.var_pixel_size =tk.StringVar()
-        
+        self.imaging_type_list=["Absorption", "Fluorescence"]
         #Init TkVars
         self.init_tk_vars()
 
@@ -192,11 +193,12 @@ class PlotFrame(tk.Frame):
         self.check_fix_colorbar = HoverCheckButton(self.Option_frame, text= 'Fix colorbar', variable= self.var_fix_cbar, font = 'CMUBright', activebackground = 'LightSkyblue1')
         self.check_fixed_cursor = HoverCheckButton(self.Option_frame, text='Fixed cursor', variable=self.var_fixed_cursors, font = 'CMUBright', activebackground = 'LightSkyblue1')
         self.check_background_correction = HoverCheckButton(self.Option_frame, text='Background correction', variable=self.var_background_correction,font = 'CMUBright', activebackground = 'LightSkyblue1', state=tk.DISABLED)
+        self.menu_imaging_type = tk.OptionMenu(self.Option_frame, self.var_imaging_type, *self.imaging_type_list)
         self.check_gauss_fit.grid(row=0, column = 0, sticky= 'w')
         self.check_fix_colorbar.grid(row=1, column=0, sticky='w')
         self.check_fixed_cursor.grid(row=2, column = 0, sticky= 'w')
         self.check_background_correction.grid(row=3, column=0, sticky='w')
-
+        self.menu_imaging_type.grid(row=4, column=0, sticky="we")
         # Background selection #
         self.select_background = HoverButton(self.Background_frame, text='Select new background', command=self.mainapp.on_select_new_background)
         self.show_background = HoverButton(self.Background_frame, text='Show current background', state=tk.DISABLED, command=self.mainapp.on_show_background)
@@ -251,3 +253,4 @@ class PlotFrame(tk.Frame):
         self.var_fix_cbar.set(FIX_COLORBAR)
         self.var_cam_name.set(VAR_CAM_NAME)
         self.var_pixel_size.set(str(VAR_PIXEL_SIZE))
+        self.var_imaging_type.set(self.imaging_type_list[0])
