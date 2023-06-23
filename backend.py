@@ -18,23 +18,22 @@ class Watchdog_runs(Observer, FileSystemEventHandler):
     # def on_any_event(self, event):
     #     print(event)
     def on_created(self, event):
-        if event.is_directory:
-            if self.last_created_path is None:
+        #if event.is_directory:
+        if self.last_created_path is None:
+            time.sleep(1.5) #Wait until Camera program has time to save the 3 pictures, if we don't wait the program crashes
+            self.backend.notify_runs(event, self.type)
+            self.last_created_path=event.src_path
+        else: 
+            if event.src_path==self.last_created_path:
+                return
+            else: 
                 time.sleep(1.5) #Wait until Camera program has time to save the 3 pictures, if we don't wait the program crashes
                 self.backend.notify_runs(event, self.type)
                 self.last_created_path=event.src_path
-            else: 
-                if event.src_path==self.last_created_path:
-                    return
-                else: 
-                    time.sleep(1.5) #Wait until Camera program has time to save the 3 pictures, if we don't wait the program crashes
-                    self.backend.notify_runs(event, self.type)
-                    self.last_created_path=event.src_path
 
-    # def on_modified(self, event):
-    #     print(event)
-    #     if event.is_directory:
-    #         self.backend.notify_runs(event)
+    #def on_modified(self, event):
+    #    if event.is_directory:
+    #       self.backend.notify_runs(event)
     def on_deleted(self, event):
         self.backend.notify_runs(event, self.type)
     def kill(self):
