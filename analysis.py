@@ -108,9 +108,30 @@ class Analysis:
             img_no_atoms = np.array(ImageSequence.Iterator(im)[1].rotate(self.angle_vert_TC-90))
             img_background = np.array(ImageSequence.Iterator(im)[2].rotate(self.angle_vert_TC-90))
         elif self.camera_name == 'PixelFly' or self.camera_name == 'PixelFly_ODT':
-            img_with_atoms = np.array(ImageSequence.Iterator(im)[0].rotate(anglepxf-self.angle_12_PXF))
-            img_no_atoms = np.array(ImageSequence.Iterator(im)[1].rotate(anglepxf-self.angle_12_PXF))
-            img_background = np.array(ImageSequence.Iterator(im)[2].rotate(anglepxf-self.angle_12_PXF))
+            if sum(1 for _ in ImageSequence.Iterator(im)) == 3: # if 3 pictures are taken, the fast scan is off 
+                img_with_atoms = np.array(ImageSequence.Iterator(im)[0].rotate(anglepxf-self.angle_12_PXF))
+                img_no_atoms = np.array(ImageSequence.Iterator(im)[1].rotate(anglepxf-self.angle_12_PXF))
+                img_background = np.array(ImageSequence.Iterator(im)[2].rotate(anglepxf-self.angle_12_PXF))
+            else:
+                img = ImageSequence.Iterator(im)[0]
+                width, height = img.size
+                new_width, new_height = width, height//2
+
+                left_with_atoms = 0
+                right_with_atoms = width
+                top_with_atoms = 0
+                bottom_with_atoms = new_height
+                img_with_atoms = np.array(img.crop((left_with_atoms, top_with_atoms, right_with_atoms, bottom_with_atoms)))
+
+                left_no_atoms = 0
+                right_no_atoms = width
+                top_no_atoms = new_height
+                bottom_no_atoms = 2*new_height
+                img_no_atoms = np.array(img.crop((left_no_atoms, top_no_atoms, right_no_atoms, bottom_no_atoms)))
+
+                img_background = np.zeros(img_no_atoms.shape)
+                
+
         elif self.camera_name == 'Thorlabs 2':
             img_with_atoms = np.array(ImageSequence.Iterator(im)[0].rotate(180))
             img_no_atoms = np.array(ImageSequence.Iterator(im)[1].rotate(180))
